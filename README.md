@@ -1,4 +1,4 @@
-username = khushidhakad2003
-password = cjbJhez8qC1u9NKc
+username = 22cs10kh128
+password = go7EaDH7ekJnWnZJ
 
-url = mongodb+srv://khushidhakad2003:cjbJhez8qC1u9NKc@cluster0.rk8el.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+url = mongodb+srv://22cs10kh128:go7EaDH7ekJnWnZJ@cluster0.7t7tf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0

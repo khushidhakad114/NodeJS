@@ -1,16 +1,19 @@
-const express = require("express");
-const connectDB = require("./src/config/db");
-const app = express();
+const express=require('express');
+require("./config/db");
+const app=express();
 
-app.get("/", (req, res) => {
-  res.send("Hello World");
-});
-app.get("/about", (req, res) => {
+app.get('/', (req, res)=>{
+  res.send("Welcome! to my homepage");
+})
+
+app.get('/about', (req,res)=>{
   res.json({
-    name: "John Doe",
-    age: 30,
-  });
-});
-app.listen(8000, () => {
-  console.log("Server is running on port 8000");
-});
+    name: "Khushbu Chacholiya",
+    age: "21",
+    mobile: "8962610173",
+  })
+})
+
+app.listen(8000,()=>{
+  console.log("server is running on port 8000");
+})

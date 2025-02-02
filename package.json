@@ -7,7 +7,7 @@
   },
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "username = khushidhakad2003\r password = cjbJhez8qC1u9NKc",
   "dependencies": {
     "express": "^4.21.2",
     "mongodb": "^6.13.0",
