@@ -1,16 +1,13 @@
 const express = require("express");
-const connectDB = require("./config/db");
 const app = express();
+const connectDB = require("./config/db");
+const userRouter = require("./routes/userRoutes");
 
-app.get("/", (req, res) => {
-  res.send("Hello World");
-});
-app.get("/about", (req, res) => {
-  res.json({
-    name: "John Doe",
-    age: 30,
-  });
-});
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use("/api", userRouter);
+
 app.listen(8000, () => {
   console.log("Server is running on port 8000");
 });
