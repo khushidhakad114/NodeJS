@@ -46,4 +46,36 @@ exports.loginUser = async (req, res) => {
       res.status(500).json({ error: "Error in logging", details: err.message });
     }
   };
+
+  exports.userProfile=async(req,res)=>{
+    try{
+        const { id } = req.params;
+        const user = await User.findById(id).select("-password");
+        res.status(200).json({ user });
+    }catch(err){
+        res
+      .status(500)
+      .json({ error: "Error fetching user", details: err.message });
+    }
+  };
+
+  exports.updateProfile=async(req,res)=>{
+    try{
+        const {id}=req.params;
+        const option={new:true};
+        
+        const {firstName,lastName,email,phone, age,gender,password,skills}=req.body;
+        const user=await User.findByIdAndUpdate(id,req.body,{
+            returnDocument:"after"
+        })
+        if(!user){
+            throw new Error("User not found");
+        }
+        user.save()
+        res.status(200).json({message:"User profile updated successfully",user})
+    }catch(err){
+        console.error(err);
+        res.status(500).json({error:"internal server error"});
+    }
+  }
  
