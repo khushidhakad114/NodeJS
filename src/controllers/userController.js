@@ -1,51 +1,54 @@
 const User = require("../models/User");
+const bcrypt = require("bcrypt");
 
 const createUser = async (req, res) => {
   try {
-    const { name, email, age } = req.body;
-    console.log(name, email, age);
-
-    const newUser = new User({ name, email, age });
-
+    const { firstName, email, password } = req.body;
+    if (!firstName || !email || !password) {
+      return res.status(400).json({ message: "Please fill in all fields" });
+    }
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ error: "Email is already in use. Please Login" });
+    }
+    const passwordHash = await bcrypt.hash(password, 10);
+    const newUser = new User({ firstName, email, password: passwordHash });
     await newUser.save();
+    res.status(201).json({ message: "user created successfully", newUser });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ error: "error creating user", details: err.message });
+  }
+};
 
-    res.status(201).json({
-      message: "User created successfully",
-      user: newUser,
+const loginUser = async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required." });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ error: "Invalid email or password." });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ error: "Invalid credentials." });
+    }
+
+    res.status(200).json({
+      message: "Login successful",
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Error creating user" });
+    res.status(500).json({ error: "Error logging in", details: err.message });
   }
 };
 
-const getUser = async (req, res) => {
-  try {
-    const users = await User.find({ name: "kh" });
-    if (users.length == 0) {
-      throw new Error("User not found");
-    }
-    res.status(200).json({ users });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
-};
-
-const getParticularUser = async (req, res) => {
-  try {
-    const { id } = req.params;
-    // const options = { new: true };
-    // const user = await User.findByIdAndUpdate(
-    //   id,
-    //   { name: "jason bourne" },
-    //   options
-    // );
-    const userDelete = await User.findByIdAndDelete(id);
-    res.status(200).json({ userDelete });
-  } catch (err) {
-    res.status(500).json({ error: "Error" });
-  }
-};
-
-module.exports = { createUser, getUser, getParticularUser };
+module.exports = { createUser, loginUser };
