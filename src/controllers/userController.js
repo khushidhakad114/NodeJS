@@ -1,6 +1,6 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
-
+const safeData = "firstName lastName email";
 const createUser = async (req, res) => {
   try {
     const { firstName, email, password } = req.body;
@@ -25,13 +25,13 @@ const createUser = async (req, res) => {
 };
 
 const loginUser = async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required." });
-  }
-
   try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: "All fields are required." });
+    }
+
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ error: " Please SignUp" });
@@ -51,4 +51,16 @@ const loginUser = async (req, res) => {
   }
 };
 
-module.exports = { createUser, loginUser };
+const myProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id).select("-password");
+    res.status(200).json({ user });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ error: "Error fetching user", details: err.message });
+  }
+};
+
+module.exports = { createUser, loginUser, myProfile };
