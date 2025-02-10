@@ -1,18 +1,15 @@
 const express=require('express');
+const userRouter = require('./routes/userRouters');
 require("./config/db");
 const app=express();
 
-app.get('/', (req, res)=>{
-  res.send("Welcome! to my homepage");
-})
+// middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.get('/about', (req,res)=>{
-  res.json({
-    name: "Khushbu Chacholiya",
-    age: "21",
-    mobile: "8962610173",
-  })
-})
+
+// Api Routes
+app.use("/api", userRouter)
 
 app.listen(8000,()=>{
   console.log("server is running on port 8000");
