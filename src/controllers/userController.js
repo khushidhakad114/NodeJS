@@ -63,4 +63,27 @@ const myProfile = async (req, res) => {
   }
 };
 
-module.exports = { createUser, loginUser, myProfile };
+const updateProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { firstName, lastName, email, phone, age, gender, password, skills } =
+      req.body;
+    const option = { new: true };
+    const user = await User.findByIdAndUpdate(id, req.body, option).select(
+      "-password"
+    );
+    if (!user) {
+      throw new Error("User not found");
+    }
+    user.save();
+    res
+      .status(200)
+      .json({ message: "User profile updated successfully", user });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ error: "Error updating user", details: err.message });
+  }
+};
+
+module.exports = { createUser, loginUser, myProfile, updateProfile };
