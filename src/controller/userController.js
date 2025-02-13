@@ -1,10 +1,11 @@
 const User = require("../model/user");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
-exports.postUser = async (req, res) => {
+exports.signUser = async (req, res) => {
   try {
     const { firstName,lastName, email, password } = req.body;
-    if (!firstName || lastName||!email || !password) {
+    if (!firstName || !lastName||!email || !password) {
       throw new Error("All fields are require");
     }
     const existingUser = await User.findOne({ email });
@@ -40,6 +41,9 @@ exports.loginUser = async (req, res) => {
         throw new Error("Invalid credentials! Please enter correct email and password" );
       }
   
+    const token = jwt.sign({ id: user.email }, "secret", { expiresIn: "1h" });
+    res.cookie("token", token);
+
       res.status(200).json({message: "Login successful"});
     } catch (err) {
       console.error(err);
