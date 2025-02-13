@@ -1,15 +1,16 @@
 const jwt = require("jsonwebtoken");
 const userMiddleware = async (req, res, next) => {
   try {
-    console.log(req);
     const token = req.cookies.token;
-    console.log(token);
+
     if (!token) {
       return res.status(401).json({ message: "Unauthorized" });
     }
     const decoded = jwt.verify(token, "secret");
-    console.log(decoded);
-    req.user = decoded;
+    console.log(decoded.id, "this is decoded value");
+    req.user = decoded.id;
+    //req.user = "token se aane wala email ban jayega req.user";
+
     next();
   } catch (err) {
     console.log(err);

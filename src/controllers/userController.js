@@ -2,6 +2,8 @@ const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const safeData = "firstName lastName email";
+
+//signup logic
 const createUser = async (req, res) => {
   try {
     const { firstName, email, password } = req.body;
@@ -25,6 +27,7 @@ const createUser = async (req, res) => {
   }
 };
 
+//login controller
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -57,8 +60,9 @@ const loginUser = async (req, res) => {
 
 const myProfile = async (req, res) => {
   try {
-    const { id } = req.params;
-    const user = await User.findById(id).select("-password");
+    const email = req.user;
+
+    const user = await User.find({ age: 20 }).select("-password");
     res.status(200).json({ user });
   } catch (err) {
     res

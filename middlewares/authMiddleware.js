@@ -2,14 +2,14 @@ const jwt = require("jsonwebtoken");
 
 const authMiddleware = (req, res, next) => {
   try {
-    console.log(req.cookies);
     const cookies = req.cookies;
-    console.log(cookies);
+
     const { token } = cookies;
     if (!token) {
       throw new Error("You are not authorized");
     }
     const decoded = jwt.verify(token, "secret");
+    console.log(decoded, "decoded");
     req.user = decoded;
     next();
   } catch (err) {
