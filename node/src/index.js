@@ -12,8 +12,7 @@ app.use(express.urlencoded({ extended: true }));
 
 
 // Api Routes
-app.use("/api", userRouter)
-
+app.use("/api", userRouter);
 app.listen(8000,()=>{
   console.log("server is running on port 8000");
 })

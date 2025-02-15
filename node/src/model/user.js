@@ -40,5 +40,6 @@ const userSchema= new Schema({
 
 });
 
+userSchema.set("strict", "throw");
 const User=mongoose.model("User", userSchema)
 module.exports=User;

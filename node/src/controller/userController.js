@@ -2,6 +2,8 @@ const User = require("../model/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+
+// signUp logic
 exports.signUser = async (req, res) => {
   try {
     const { firstName,lastName, email, password } = req.body;
@@ -23,7 +25,7 @@ exports.signUser = async (req, res) => {
   }
 };
 
-
+// login logic
 exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
   
@@ -51,35 +53,16 @@ exports.loginUser = async (req, res) => {
     }
   };
 
-  exports.userProfile=async(req,res)=>{
-    try{
-        const { id } = req.params;
-        const user = await User.findById(id).select("-password");
-        res.status(200).json({ user });
-    }catch(err){
-        res
-      .status(500)
-      .json({ error: "Error fetching user", details: err.message });
-    }
-  };
+// logOut logic
+exports.logoutUser = async (req, res) => {
+  try{
+    res.clearCookie("token");
+    res.status(200).json({message:"successfully logged out"});
 
-  exports.updateProfile=async(req,res)=>{
-    try{
-        const {id}=req.params;
-        const option={new:true};
-        
-        const {firstName,lastName,email,phone, age,gender,password,skills}=req.body;
-        const user=await User.findByIdAndUpdate(id,req.body,{
-            returnDocument:"after"
-        })
-        if(!user){
-            throw new Error("User not found");
-        }
-        user.save()
-        res.status(200).json({message:"User profile updated successfully",user})
-    }catch(err){
-        console.error(err);
-        res.status(500).json({error:"internal server error"});
-    }
-  }
+  }catch(err){
+  console.error(err.message);
+}
+}
+
+
  

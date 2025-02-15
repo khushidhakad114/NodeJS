@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const User = require("../model/user");
 const userMiddleware = async (req, res, next) => {
   try {
     const token = req.cookies.token;
@@ -7,7 +8,11 @@ const userMiddleware = async (req, res, next) => {
     }
     const decoded = jwt.verify(token, "secret");
     console.log(decoded);
-    req.user = decoded;
+
+    req.user = await User.findOne({ email: decoded.id });
+    if (!req.user) {
+      return res.status(401).json({ error: "User not found" });
+    }
     next();
   } catch (err) {
     console.log(err);
