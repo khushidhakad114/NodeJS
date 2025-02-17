@@ -38,6 +38,6 @@ const userSchema = new Schema({
     type: [String],
   },
 });
-
+userSchema.set("strict", "throw");
 const User = mongoose.model("User", userSchema);
 module.exports = User;
