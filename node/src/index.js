@@ -3,8 +3,11 @@ const userRouter = require('./routes/userRouters');
 var cookieParser = require('cookie-parser')
 require("./config/db");
 const app=express();
+const cors=require("cors");
+
 
 app.use(cookieParser());
+app.use(cors())
 
 // middleware
 app.use(express.json());
