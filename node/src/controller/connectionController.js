@@ -1,26 +1,27 @@
-const { connection, get } = require("mongoose");
 const User = require("../model/user");
+const connection=require("../model/connection")
 
 
 exports.connectionRequest=async(req,res)=>{
     try{
         const loggedInId=req.user;//taking the id of the user who is logged in
         const toUserId=req.params.toUserId;//taking the id of the user to whom the connection request is being sent
-        const getLoggedUserId=await User.find({id:req.user.id}); //checking if the user exists in the database
-        console.log(getLoggedUserId);
+
+       // const getLoggedUserId=await User.find({_id:req.user.id}); //checking if the user exists in the database
+       //  console.log("logIn user:", loggedInId);
 
         const allowedStatus=["igonered","interested"];//dynamic allowing status 
         if(!allowedStatus.includes(req.params.status)){
             return res.status(400).json({message:"Invalid status"}); //checking if the status is valid
         }
 
-        const isRequestAlreadyExists=await connection.findOne({
+        const isRequestAlreadyExists=await connection.exists({
             $or:[
-                {sender: getLoggedUserId, 
+                {sender: loggedInId, 
                  receiver: toUserId}, //checking whether the user has already sent a request to the other user
 
                 {sender: toUserId,
-                receiver: getLoggedUserId},// checking whether the other user has already sent a request to the user
+                receiver: loggedInId},// checking whether the other user has already sent a request to the user
             ],
         });
         if (isRequestAlreadyExists) { //if the request already exists
@@ -29,7 +30,7 @@ exports.connectionRequest=async(req,res)=>{
 
         //if connection is not exist already then creating the new connection
         const createConnection=new connection({
-            sender:getLoggedUserId,
+            sender:loggedInId,
             receiver:toUserId,
             status:req.params.status
         })

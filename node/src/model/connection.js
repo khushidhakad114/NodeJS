@@ -2,7 +2,7 @@ const mongoose=require("mongoose");
 const {schema}=require("mongoose");
 const { applyTimestamps } = require("./user");
 
-const connectionDb=new Schema({
+const connectionDb=new mongoose.Schema({
     sender:{
         type:mongoose.Schema.Types.ObjectId,
         ref:"User",
