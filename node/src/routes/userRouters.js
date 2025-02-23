@@ -6,7 +6,7 @@ const userRouter=express.Router();
 
  userRouter.post("/signUp", signUser);
  userRouter.post("/loginUser",loginUser);
- userRouter.get("/userProfile",userMiddleware, userProfile);
+ userRouter.get("/userProfile",userMiddleware,userProfile);
  userRouter.put("/updateUserProfile",userMiddleware, updateProfile);
  userRouter.post("/logOut",logoutUser);
 

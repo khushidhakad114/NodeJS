@@ -1,27 +1,35 @@
 const User = require("../model/user");
 
 // user-profile read logic
-exports.userProfile=async(req,res)=>{
-    try{
-        const {id}=req.user;
-        const user = await User.find({email:req.user.email}).select("-password");
-        res.status(200).json({ user });
-    }catch(err){
-        res
-      .status(500)
-      .json({ error: "Error fetching user", details: err.message });
+exports.userProfile = async (req, res) => {
+    try {
+      const { id } = req.user;
+      console.log("User ID from Middleware:", id);
+  
+      const user = await User.findOne({ _id: id }).select("-password");
+  
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+  
+      res.status(200).json({ user });
+    } catch (err) {
+      console.error("Error fetching user:", err);
+      res.status(500).json({ error: "Error fetching user", details: err.message });
     }
   };
+  
+  
 
   // user profile update logic
   exports.updateProfile=async(req,res)=>{
     try{
         // const {id}=req.params;
-        const {eml}=req.user.email;
+        const { id } = req.user;
         const option={new:true};
         
         const {firstName,lastName,email,phone, age,gender,password,skills}=req.body;
-        const user=await User.findOneAndUpdate(eml,req.body,{
+        const user=await User.findOneAndUpdate({ _id: id },req.body,{
             returnDocument:"after"
         })
         if(!user){

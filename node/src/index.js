@@ -4,6 +4,7 @@ var cookieParser = require('cookie-parser')
 require("./config/db");
 const app=express();
 const cors=require("cors");
+const connectionRouter = require('./routes/connectionRoute');
 
 
 app.use(cookieParser());
@@ -20,6 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Api Routes
 app.use("/api", userRouter);
+app.use("/api",connectionRouter )
 app.listen(8000,()=>{
   console.log("server is running on port 8000");
 })
