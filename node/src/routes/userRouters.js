@@ -1,7 +1,7 @@
 const express=require("express");
-const { signUser, loginUser, logoutUser } = require("../controller/userController");
 const { userMiddleware } = require("../middleware/authMiddleware");
 const { userProfile, updateProfile } = require("../controller/profilecontroller");
+const { signUser, loginUser, logoutUser } = require("../controller/authController");
 const userRouter=express.Router();
 
  userRouter.post("/signUp", signUser);
