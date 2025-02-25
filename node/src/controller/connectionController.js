@@ -60,18 +60,19 @@ exports.updateRequest=async(req,res)=>{
         if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
             return res.status(400).json({ message: "Invalid request ID format" });
         }
-        
+
+        console.log("Request ID:", req.params.id);
+
         const connectionReqestValid=await connection.findOne({
             _id:req.params.id,
             receiver:loggedInId.id,
             status:"interested",
         });
-        // console.log("Request ID:", req.params.id);
-        // console.log("Logged In User ID:", loggedInId.id);
-        // console.log("Connection Request Valid:", connectionReqestValid);
+         console.log("Logged In User ID:", loggedInId);
+         console.log("Connection Request Valid:", connectionReqestValid);
 
         if(!connectionReqestValid){
-            return res.status(400).json({message:"Invalid request"});
+            return res.status(400).json({message:"Invalid requesttt"});
         }
 
         connectionReqestValid.status=req.params.status;

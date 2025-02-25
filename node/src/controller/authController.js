@@ -62,6 +62,3 @@ exports.logoutUser = async (req, res) => {
   console.error(err.message);
 }
 }
-
-
- 
