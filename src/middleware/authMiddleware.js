@@ -15,7 +15,7 @@ const userMiddleware = async (req, res, next) => {
     const userId =new mongoose.Types.ObjectId(decoded.id);
     req.user = await User.findOne({ _id: userId }).select("-password");
 
-    //console.log("Fetched User:", req.user);
+    // console.log("Fetched User:", req.user);
 
     if (!req.user) {
       return res.status(401).json({ error: "User not found" });
