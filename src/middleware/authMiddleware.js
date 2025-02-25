@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const userMiddleware = async (req, res, next) => {
+const mongoose = require("mongoose");
+const authMiddleware = async (req, res, next) => {
   try {
     const token = req.cookies.token;
     if (!token) {
@@ -8,7 +9,11 @@ const userMiddleware = async (req, res, next) => {
     }
     const decoded = jwt.verify(token, "secret");
     console.log(decoded);
-    req.user = await User.findOne({ email: decoded.email });
+    const userId = new mongoose.Types.ObjectId(decoded.id);
+    console.log(userId);
+    req.user = await User.findOne({ _id: userId }).select("-password");
+    console.log(req.user);
+
     if (!req.user) {
       return res.status(401).json({ error: "User not found" });
     }
@@ -18,4 +23,4 @@ const userMiddleware = async (req, res, next) => {
   }
 };
 
-module.exports = { userMiddleware };
+module.exports = { authMiddleware };
