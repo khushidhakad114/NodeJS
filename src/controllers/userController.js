@@ -3,7 +3,7 @@ const User = require("../models/User");
 // user-profile read logic
 const myProfile = async (req, res) => {
   try {
-    const { id } = req.user;
+    const { id } = req.user; // ye waali
     console.log("User ID from Middleware:", id);
 
     const user = await User.findOne({ _id: id }).select("-password");
