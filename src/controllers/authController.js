@@ -16,7 +16,12 @@ const createUser = async (req, res) => {
         .json({ error: "Email is already in use. Please Login" });
     }
     const passwordHash = await bcrypt.hash(password, 10);
-    const newUser = new User({ firstName, email, password: passwordHash });
+    const newUser = new User({
+      firstName,
+      lastName,
+      email,
+      password: passwordHash,
+    });
     await newUser.save();
     res.status(201).json({ message: "user created successfully", newUser });
   } catch (err) {

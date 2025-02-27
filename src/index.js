@@ -9,8 +9,9 @@ const connectionRouter = require("./routes/connectionRoutes");
 app.use(cookieParser());
 app.use(
   cors({
+    origin: "http://localhost:3000",
     credentials: true,
-    httpOnly: true, // This will prevent JavaScript on web pages from accessing the session cookie
+    // This will prevent JavaScript on web pages from accessing the session cookie
   })
 );
 
