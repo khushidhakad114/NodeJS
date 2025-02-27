@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const User = require("../model/user");
 const connection=require("../model/connection")
+const name=["firstName","lastName","-_id"];
 
 
 exports.connectionRequest=async(req,res)=>{
@@ -99,7 +100,7 @@ exports.getAllReceivingRequest = async (req, res) => {
   
       const receiveRequest= await connection.find({ receiver:id,
         status:"interested"
-       }).populate("sender","firstName lastName");
+       }).populate("sender","firstName lastName").select(name);
 
       res.status(200).json({ receiveRequest });
     } catch (err) {
