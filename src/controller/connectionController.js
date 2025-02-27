@@ -94,9 +94,12 @@ exports.updateRequest=async(req,res)=>{
 exports.getAllReceivingRequest = async (req, res) => {
     try {
       const { id } = req.user;
+      
       console.log("User ID from Middleware:", id);
   
-      const receiveRequest= await connection.find({ receiver:id });
+      const receiveRequest= await connection.find({ receiver:id,
+        status:"interested"
+       })
 
       res.status(200).json({ receiveRequest });
     } catch (err) {
@@ -110,7 +113,7 @@ exports.getAllReceivingRequest = async (req, res) => {
       const { id } = req.user;
       console.log("User ID from Middleware:", id);
   
-      const senderRequest= await connection.find({ sender:id });
+      const senderRequest= await connection.find({ sender:id, status:"accepted" });
 
       res.status(200).json({ senderRequest });
     } catch (err) {
