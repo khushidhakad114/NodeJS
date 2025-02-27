@@ -109,7 +109,7 @@ const getAllSendRequests = async (req, res) => {
     const sendRequests = await Connection.find({ sender: loggedInId }); // loggedInd mtlb mei , mei matlb loggedInd
 
     if (!sendRequests.length) {
-      return res.status(404).json({ message: "No requests received yet" });
+      return res.status(404).json({ message: "No requests received." });
     }
 
     res.status(200).json({ sendRequests });
