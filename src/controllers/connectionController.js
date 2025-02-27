@@ -86,8 +86,14 @@ const getAllRequests = async (req, res) => {
   try {
     const loggedInId = req.user._id; // ID of the logged-in user
 
-    const receiveRequests = await Connection.find({ receiver: loggedInId }); // loggedInd mtlb mei , mei matlb loggedInd
-
+    const receiveRequests = await Connection.find({
+      receiver: loggedInId,
+      status: "interested",
+    }).populate({
+      path: "sender",
+      select: "firstName lastName -_id",
+    }); // loggedInd mtlb mei , mei matlb loggedInd
+    console.log(receiveRequests);
     if (!receiveRequests.length) {
       return res.status(404).json({ message: "No requests received yet" });
     }
@@ -106,10 +112,13 @@ const getAllSendRequests = async (req, res) => {
   try {
     const loggedInId = req.user._id; // ID of the logged-in user
 
-    const sendRequests = await Connection.find({ sender: loggedInId }); // loggedInd mtlb mei , mei matlb loggedInd
+    const sendRequests = await Connection.find({
+      sender: loggedInId,
+      status: "interested",
+    }); // loggedInd mtlb mei , mei matlb loggedInd
 
     if (!sendRequests.length) {
-      return res.status(404).json({ message: "No requests received." });
+      return res.status(404).json({ message: "No requests send yet." });
     }
 
     res.status(200).json({ sendRequests });
