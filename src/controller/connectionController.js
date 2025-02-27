@@ -99,7 +99,7 @@ exports.getAllReceivingRequest = async (req, res) => {
   
       const receiveRequest= await connection.find({ receiver:id,
         status:"interested"
-       })
+       }).populate("sender","firstName lastName");
 
       res.status(200).json({ receiveRequest });
     } catch (err) {
