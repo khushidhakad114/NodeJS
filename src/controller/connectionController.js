@@ -122,3 +122,27 @@ exports.getAllReceivingRequest = async (req, res) => {
       res.status(500).json({ error: "Error fetching user", details: err.message });
     }
   };
+
+  exports.getAlluserFriends = async (req, res) => {
+    try{
+        const loggedInId=req.user._id;
+        const friends=await connection.find({
+            $or:[
+                {sender:loggedInId},
+                {receiver:loggedInId},
+            ],
+            status:"accepted",
+        }).populate("sender","firstName lastName").populate("receiver","firstName lastName");
+
+        const data=friends.map((friend)=>{
+            if(friend.sender._id.toString()===loggedInId){
+                return friend.receiver;
+            }else{
+                return friend.sender;
+            }
+        });
+      res.status(200).json({ friends:data });
+    }catch(err){
+        res.status(500).json({ error: "Error fetching user", details: err.message});
+    }
+  };
