@@ -1,5 +1,6 @@
 const Connection = require("../models/connection");
 const mongoose = require("mongoose");
+const User = require("../models/User");
 
 const sendRequest = async (req, res) => {
   try {
@@ -107,6 +108,39 @@ const getAllRequests = async (req, res) => {
   }
 };
 
+const getAllFriends = async (req, res) => {
+  try {
+    const loggedInId = req.user._id;
+
+    const friends = await Connection.find({
+      $or: [
+        {
+          sender: loggedInId,
+        },
+        {
+          receiver: loggedInId,
+        },
+      ],
+      status: "accepted",
+    })
+      .populate("sender", "firstName lastName")
+      .populate("receiver", "firstName lastName");
+
+    const data = friends.map((friend) => {
+      if (friend.sender._id.toString() === loggedInId.toString()) {
+        return friend.receiver;
+      } else {
+        return friend.sender;
+      }
+    });
+    res.status(201).json({ data });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ err: "Error getting all friends", details: err.message });
+  }
+};
+
 const getAllSendRequests = async (req, res) => {
   //jo jo request mili
   try {
@@ -130,9 +164,30 @@ const getAllSendRequests = async (req, res) => {
   }
 };
 
+const friendsProfile = async (req, res) => {
+  try {
+    const friendId = req.params.id;
+
+    const friend = await User.findById(friendId).select("-password");
+
+    if (!friend) {
+      return res.status(404).json({ message: "Friend not found" });
+    }
+
+    res.status(200).json({ friend });
+  } catch (err) {
+    res.status(500).json({
+      error: "Error fetching friend profile",
+      details: err.message,
+    });
+  }
+};
+
 module.exports = {
   sendRequest,
   updateRequest,
   getAllRequests,
   getAllSendRequests,
+  getAllFriends,
+  friendsProfile,
 };
