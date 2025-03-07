@@ -62,7 +62,8 @@ exports.loginUser = async (req, res) => {
       // console.log("Excluded Users:", excludeUsers);
   
       const usersExitsInConnection = await connection.find({
-        $or: [{ sender: loggendInId }, { receiver: loggendInId }]
+        $or: [{ sender: loggendInId }, 
+              { receiver: loggendInId }]
       })
         .select("sender receiver")
         .populate("sender", "firstName")
@@ -70,12 +71,12 @@ exports.loginUser = async (req, res) => {
   
       // console.log("Users exist in connection:", usersExitsInConnection);
   
-      if (usersExitsInConnection && usersExitsInConnection.length > 0) {
-        usersExitsInConnection.forEach((connection) => {
+     
+      usersExitsInConnection.forEach((connection) => {
           excludeUsers.add(connection.sender._id.toString());
           excludeUsers.add(connection.receiver._id.toString());
-        });
-      }
+      });
+      
   
       // console.log("Excluded Users updated:", excludeUsers);
   

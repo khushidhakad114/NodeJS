@@ -109,6 +109,7 @@ exports.getAllReceivingRequest = async (req, res) => {
     }
   };
 
+
   exports.getAllSenderRequest = async (req, res) => {
     try {
       const { id } = req.user;
@@ -122,6 +123,7 @@ exports.getAllReceivingRequest = async (req, res) => {
       res.status(500).json({ error: "Error fetching user", details: err.message });
     }
   };
+
 
   exports.getAlluserFriends = async (req, res) => {
     try{
@@ -147,6 +149,7 @@ exports.getAllReceivingRequest = async (req, res) => {
     }
   };
 
+
   exports.getFriendProfile= async (req, res) => {
     try {
      
@@ -163,3 +166,46 @@ exports.getAllReceivingRequest = async (req, res) => {
       res.status(500).json({ error: "Error fetching in friend", details: err.message });
     }
   };
+
+  
+exports.blockUser = async (req, res) => {
+  try {
+      const loggedInId = req.user._id;
+      const blockUserId = req.params.id;
+      const status = req.params.status; // Extract status from params
+
+      const allowedStatus = ["block", "unblock"];
+      if (!allowedStatus.includes(status)) {
+          return res.status(400).json({ message: "Invalid status" });
+      }
+
+      // Check if a connection exists between the users
+      let blockUser = await connection.findOne({
+          $or: [
+              { sender: loggedInId, receiver: blockUserId },
+              { sender: blockUserId, receiver: loggedInId },
+          ],
+      });
+
+      if (blockUser) {
+          // If connection exists, update its status
+          blockUser.status = status;
+          await blockUser.save();
+      } else {
+          // If no connection exists, create a new entry for blocking
+          blockUser = await connection.create({
+              sender: loggedInId,
+              receiver: blockUserId,
+              status: "block",
+          });
+      }
+
+      console.log("User blocked successfully:", blockUser);
+      res.status(200).json({ message: "User blocked successfully", data: blockUser });
+
+
+  } catch (err) {
+      res.status(500).json({ error: "Error updating user status", details: err.message });
+  }
+};
+
