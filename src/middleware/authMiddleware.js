@@ -11,7 +11,7 @@ const authMiddleware = async (req, res, next) => {
     console.log(decoded);
     const userId = new mongoose.Types.ObjectId(decoded.id);
     console.log(userId);
-    req.user = await User.findOne({ _id: userId }).select("-password");
+    req.user = await User.findById({ _id: userId }).select("-password");
     console.log(req.user);
 
     if (!req.user) {

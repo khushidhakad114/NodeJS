@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const Connection = require("../models/connection");
 const safeData = "firstName lastName email";
 
 const createUser = async (req, res) => {
@@ -72,4 +73,39 @@ const logOut = async (req, res) => {
   }
 };
 
-module.exports = { createUser, loginUser, logOut };
+const feed = async (req, res) => {
+  try {
+    const loggedInId = req.user._id;
+    console.log(loggedInId);
+
+    const excludedUser = new Set([loggedInId]);
+
+    const userExistsInConnection = await Connection.find({
+      $or: [{ sender: loggedInId }, { receiver: loggedInId }],
+    })
+      .select("sender receiver")
+      .populate("sender", "firstName")
+      .populate("receiver", "firstName");
+
+    console.log("Users exist in connection:", userExistsInConnection);
+
+    userExistsInConnection.forEach((connection) => {
+      excludedUser.add(connection.sender._id.toString());
+      excludedUser.add(connection.receiver._id.toString());
+    });
+
+    console.log("excluded users", excludedUser);
+
+    const feedData = await User.find({
+      _id: { $nin: [...excludedUser] },
+    }).select(safeData);
+    res.status(201).json({ feed: feedData });
+  } catch (err) {
+    console.log(err.message);
+    res
+      .status(500)
+      .json({ error: "Error in fetching feed", details: err.message });
+  }
+};
+
+module.exports = { createUser, loginUser, logOut, feed };
