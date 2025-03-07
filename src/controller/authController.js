@@ -1,7 +1,8 @@
 const User = require("../model/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-
+const connection=require("../model/connection");
+const safeData = ["firstName", "lastName", "email","age"];
 
 // signUp logic
 exports.signUser = async (req, res) => {
@@ -51,6 +52,45 @@ exports.loginUser = async (req, res) => {
       res.status(500).json({ error: "Error in logging", details: err.message });
     }
   };
+
+  exports.feed = async (req, res) => {
+    try {
+      const loggendInId = req.user.id;
+      // console.log("Logged In User:", loggendInId);
+  
+      const excludeUsers = new Set([loggendInId]);
+      // console.log("Excluded Users:", excludeUsers);
+  
+      const usersExitsInConnection = await connection.find({
+        $or: [{ sender: loggendInId }, { receiver: loggendInId }]
+      })
+        .select("sender receiver")
+        .populate("sender", "firstName")
+        .populate("receiver", "firstName");
+  
+      // console.log("Users exist in connection:", usersExitsInConnection);
+  
+      if (usersExitsInConnection && usersExitsInConnection.length > 0) {
+        usersExitsInConnection.forEach((connection) => {
+          excludeUsers.add(connection.sender._id.toString());
+          excludeUsers.add(connection.receiver._id.toString());
+        });
+      }
+  
+      // console.log("Excluded Users updated:", excludeUsers);
+  
+      const feedUsers = await User.find({
+        _id: { $nin: [...excludeUsers] }
+      }).select(safeData.join(" "));
+  
+      res.json({ success: true, feedUsers });
+  
+    } catch (err) {
+      console.log(err.message);
+      res.status(500).json({ error: "Error in fetching feed", details: err.message });
+    }
+  };
+  
 
 // logOut logic
 exports.logoutUser = async (req, res) => {

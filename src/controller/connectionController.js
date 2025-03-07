@@ -141,8 +141,25 @@ exports.getAllReceivingRequest = async (req, res) => {
                 return friend.sender;
             }
         });
-      res.status(200).json({ friends:data });
+      res.status(200).json({ data });
     }catch(err){
         res.status(500).json({ error: "Error fetching user", details: err.message});
+    }
+  };
+
+  exports.getFriendProfile= async (req, res) => {
+    try {
+     
+      const { id } = req.params;
+    //   console.log("ID",id);
+      const user = await User.findById(id).select("-password");
+  
+      if (!user) {
+        return res.status(404).json({ error: "NO such friend found" });
+      }
+  
+      res.status(200).json({ user });
+    } catch (err) {
+      res.status(500).json({ error: "Error fetching in friend", details: err.message });
     }
   };

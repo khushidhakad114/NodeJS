@@ -13,7 +13,7 @@ const userMiddleware = async (req, res, next) => {
     console.log("Decoded Token:", decoded);
 
     const userId =new mongoose.Types.ObjectId(decoded.id);
-    req.user = await User.findOne({ _id: userId }).select("-password");
+    req.user = await User.findById({ _id: userId }).select("-password");
 
     // console.log("Fetched User:", req.user);
 
