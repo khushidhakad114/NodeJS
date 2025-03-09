@@ -183,6 +183,49 @@ const friendsProfile = async (req, res) => {
   }
 };
 
+const blockedUser = async (req, res) => {
+  try {
+    const loggedInId = new mongoose.Types.ObjectId(req.user._id);
+    const blockUserId = new mongoose.Types.ObjectId(req.params.id);
+
+    // Find the existing connection
+    const existingConnection = await Connection.findOne({
+      $or: [
+        { sender: loggedInId, receiver: blockUserId },
+        { sender: blockUserId, receiver: loggedInId },
+      ],
+    });
+
+    if (!existingConnection) {
+      return res
+        .status(404)
+        .json({ error: "No connection found between users" });
+    }
+
+    // Toggle block/unblock status
+    if (existingConnection.status === "blocked") {
+      existingConnection.status = "accepted"; // Unblock user
+      await existingConnection.save();
+      return res.status(200).json({
+        message: "User unblocked successfully",
+        user: existingConnection,
+      });
+    }
+
+    existingConnection.status = "block"; // Block user
+    await existingConnection.save();
+
+    res.status(200).json({
+      message: "User blocked successfully",
+      user: existingConnection,
+    });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ error: "Error updating block status", details: err.message });
+  }
+};
+
 module.exports = {
   sendRequest,
   updateRequest,
@@ -190,4 +233,5 @@ module.exports = {
   getAllSendRequests,
   getAllFriends,
   friendsProfile,
+  blockedUser,
 };

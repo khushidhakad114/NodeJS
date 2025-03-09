@@ -17,7 +17,14 @@ const connectionSchema = new Schema(
 
     status: {
       type: String,
-      enum: ["pending", "accepted", "interested", "ignored"],
+      enum: [
+        "pending",
+        "accepted",
+        "interested",
+        "ignored",
+        "block",
+        "unblock",
+      ],
       default: "pending",
     },
   },

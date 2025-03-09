@@ -83,7 +83,7 @@ const feed = async (req, res) => {
     const userExistsInConnection = await Connection.find({
       $or: [{ sender: loggedInId }, { receiver: loggedInId }],
     })
-      .select("sender receiver")
+      .select("sender receiver status")
       .populate("sender", "firstName")
       .populate("receiver", "firstName");
 
@@ -93,6 +93,18 @@ const feed = async (req, res) => {
       excludedUser.add(connection.sender._id.toString());
       excludedUser.add(connection.receiver._id.toString());
     });
+
+    const blockedUsers = await Connection.find({
+      $or: [{ sender: loggedInId }, { receiver: loggedInId }],
+      status: "block",
+    }).select("sender receiver");
+
+    blockedUsers.forEach((connection) => {
+      excludedUser.add(connection.sender.toString());
+      excludedUser.add(connection.receiver.toString());
+    });
+
+    console.log("blocked users", blockedUsers);
 
     console.log("excluded users", excludedUser);
 

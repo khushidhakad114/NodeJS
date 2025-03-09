@@ -7,6 +7,7 @@ const {
   getAllSendRequests,
   getAllFriends,
   friendsProfile,
+  blockedUser,
 } = require("../controllers/connectionController");
 const connectionRouter = express.Router();
 connectionRouter.post(
@@ -23,5 +24,6 @@ connectionRouter.get("/receive-requests", authMiddleware, getAllRequests);
 connectionRouter.get("/send-requests", authMiddleware, getAllSendRequests);
 connectionRouter.get("/getallfriends", authMiddleware, getAllFriends);
 connectionRouter.get("/friendsprofile/:id", authMiddleware, friendsProfile);
+connectionRouter.post("/blockeduser/:id", authMiddleware, blockedUser);
 
 module.exports = connectionRouter;
