@@ -57,6 +57,7 @@ const loginUser = async (req, res) => {
 
     res.status(200).json({
       message: "Login successful",
+      user,
     });
   } catch (err) {
     console.error(err);
@@ -94,17 +95,17 @@ const feed = async (req, res) => {
       excludedUser.add(connection.receiver._id.toString());
     });
 
-    const blockedUsers = await Connection.find({
-      $or: [{ sender: loggedInId }, { receiver: loggedInId }],
-      status: "block",
-    }).select("sender receiver");
+    // const blockedUsers = await Connection.find({
+    //   $or: [{ sender: loggedInId }, { receiver: loggedInId }],
+    //   status: "block",
+    // }).select("sender receiver");
 
-    blockedUsers.forEach((connection) => {
-      excludedUser.add(connection.sender.toString());
-      excludedUser.add(connection.receiver.toString());
-    });
+    // blockedUsers.forEach((connection) => {
+    //   excludedUser.add(connection.sender.toString());
+    //   excludedUser.add(connection.receiver.toString());
+    // });
 
-    console.log("blocked users", blockedUsers);
+    // console.log("blocked users", blockedUsers);
 
     console.log("excluded users", excludedUser);
 
