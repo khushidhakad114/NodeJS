@@ -47,49 +47,55 @@ exports.connectionRequest=async(req,res)=>{
         res.status(500).json({err:"Error sending request",details:err.message});
     }
 }
+exports.updateRequest = async (req, res) => {
+    try {
+        const loggedInId = req.user._id;
+        const { id, status } = req.params;
 
-exports.updateRequest=async(req,res)=>{
-    try{
-        const loggedInId=req.user._id;
-        const getLoggedInId=loggedInId.toString(); 
-        console.log("getLogged In User ID:", getLoggedInId);
+        console.log("Requested Update for ID:", id);
+        console.log("Logged-in User ID:", loggedInId);
 
-        const allowedStatus=["accepted","ignored"];
-        if(!allowedStatus.includes(req.params.status)){
-            return res.status(400).json({message:"Invalid status"});
+        const allowedStatus = ["ignored", "accepted"];
+        if (!allowedStatus.includes(status)) {
+            return res.status(400).json({ message: "Invalid status" });
         }
 
-        // Validating ObjectId
-        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        // Ensure the request ID is valid
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            console.log("Invalid request ID format:", id);
             return res.status(400).json({ message: "Invalid request ID format" });
         }
-        const checkRequest = await connection.findById(req.params.id);
-        console.log("Request Found:", checkRequest);
 
-        const connectionReqestValid = await connection.findOne({
-            _id: req.params.id,
+        // Find the request by ID and ensure the user is either sender or receiver
+        const connectionRequestVariable = await connection.findOne({
+            _id: id,
             $or: [
-                { sender: new mongoose.Types.ObjectId(loggedInId) },
-                { receiver: new mongoose.Types.ObjectId(loggedInId) }
-            ],
-            status: "interested",
+                { receiver: new mongoose.Types.ObjectId(loggedInId) },
+                { sender: new mongoose.Types.ObjectId(loggedInId) }
+            ]
         });
-        
-         console.log("Connection Request Valid:", connectionReqestValid);
-        if(!connectionReqestValid){
-            return res.status(400).json({message:"Invalid requesttt"});
+
+        console.log("Found Connection:", connectionRequestVariable);
+
+        if (!connectionRequestVariable) {
+            return res.status(404).json({ message: "Request not found or not authorized" });
         }
-        connectionReqestValid.status=req.params.status;
 
+        // Update the status
+        connectionRequestVariable.status = status;
+        await connectionRequestVariable.save();
 
-        const updateRequestVariable=await connectionReqestValid.save()
-        res.status(200).json({message:"Request status updated successfully"});
+        res.status(200).json({
+            message: "Request updated successfully",
+            updatedRequest: connectionRequestVariable,
+        });
+    } catch (err) {
+        console.error("Error updating request:", err);
+        res.status(500).json({ error: "Error updating request", details: err.message });
     }
-    catch(error){
-        res.status(500).json({error:"Error in updating the request",details:error.message})
+};
 
-    }
-}
+
 
 
 exports.getAllReceivingRequest = async (req, res) => {
@@ -115,7 +121,7 @@ exports.getAllReceivingRequest = async (req, res) => {
       const { id } = req.user;
       console.log("User ID from Middleware:", id);
   
-      const senderRequest= await connection.find({ sender:id, status:"accepted" });
+      const senderRequest= await connection.find({ sender:id, status:"interested" });
 
       res.status(200).json({ senderRequest });
     } catch (err) {
