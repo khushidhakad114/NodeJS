@@ -131,27 +131,36 @@ exports.getAllReceivingRequest = async (req, res) => {
   };
 
 
-  exports.getAlluserFriends = async (req, res) => {
-    try{
-        const loggedInId=req.user._id;
-        const friends=await connection.find({
-            $or:[
-                {sender:loggedInId},
-                {receiver:loggedInId},
-            ],
-            status:"accepted",
-        }).populate("sender","firstName lastName").populate("receiver","firstName lastName");
-
-        const data=friends.map((friend)=>{
-            if(friend.sender._id.toString()===loggedInId){
-                return friend.receiver;
-            }else{
-                return friend.sender;
-            }
-        });
-      res.status(200).json({ data });
-    }catch(err){
-        res.status(500).json({ error: "Error fetching user", details: err.message});
+  exports.getAllFriends = async (req, res) => {
+    try {
+      const loggedInId = req.user._id;
+  
+      const friends = await connection.find({
+        $or: [
+          {
+            sender: loggedInId,
+          },
+          {
+            receiver: loggedInId,
+          },
+        ],
+        status: "accepted",
+      })
+        .populate("sender", "firstName lastName")
+        .populate("receiver", "firstName lastName");
+  
+      const data = friends.map((friend) => {
+        if (friend.sender._id.toString() === loggedInId.toString()) {
+          return friend.receiver;
+        } else {
+          return friend.sender;
+        }
+      });
+      res.status(201).json({ data });
+    } catch (err) {
+      res
+        .status(500)
+        .json({ err: "Error getting all friends", details: err.message });
     }
   };
 
