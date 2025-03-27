@@ -24,6 +24,7 @@ const connectionSchema = new Schema(
         "ignored",
         "block",
         "unblock",
+        "rejected",
       ],
       default: "pending",
     },

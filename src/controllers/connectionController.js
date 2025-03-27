@@ -46,7 +46,7 @@ const updateRequest = async (req, res) => {
     const loggedInId = req.user._id; // Logged-in user's ID
     const { id, status } = req.params; // Request ID and new status
 
-    const allowedStatus = ["ignored", "accepted"];
+    const allowedStatus = ["ignored", "accepted", "rejected"];
     if (!allowedStatus.includes(status)) {
       return res.status(400).json({ message: "Invalid status" });
     }
