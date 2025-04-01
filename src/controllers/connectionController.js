@@ -168,6 +168,12 @@ const friendsProfile = async (req, res) => {
   try {
     const friendId = req.params.id;
 
+    console.log("Fetching profile for friend ID:", friendId);
+
+    if (!mongoose.Types.ObjectId.isValid(friendId)) {
+      return res.status(400).json({ message: "Invalid friend ID" });
+    }
+
     const friend = await User.findById(friendId).select("-password");
 
     if (!friend) {
@@ -176,6 +182,7 @@ const friendsProfile = async (req, res) => {
 
     res.status(200).json({ friend });
   } catch (err) {
+    console.error("Error in fetching friend profile:", err);
     res.status(500).json({
       error: "Error fetching friend profile",
       details: err.message,
