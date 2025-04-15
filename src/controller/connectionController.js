@@ -95,25 +95,25 @@ exports.updateRequest = async (req, res) => {
     }
 };
 
-
-
-
 exports.getAllReceivingRequest = async (req, res) => {
-    try {
-      const { id } = req.user;
-      
-      console.log("User ID from Middleware:", id);
-  
-      const receiveRequest= await connection.find({ receiver:id,
-        status:"interested"
-       }).populate("sender","firstName lastName").select(name);
+  try {
+    const { id } = req.user;
 
-      res.status(200).json({ receiveRequest });
-    } catch (err) {
-      console.error("Error fetching user:", err);
-      res.status(500).json({ error: "Error fetching user", details: err.message });
-    }
-  };
+    console.log("User ID from Middleware:", id);
+
+    const receiveRequest = await connection.find({
+      receiver: id,
+      status: "interested"
+    })
+      .populate("sender", "firstName lastName")
+      .select("_id sender"); // ✅ Fixed here
+
+    res.status(200).json({ receiveRequest });
+  } catch (err) {
+    console.error("Error fetching user:", err);
+    res.status(500).json({ error: "Error fetching user", details: err.message });
+  }
+};
 
 
   exports.getAllSenderRequest = async (req, res) => {
@@ -146,8 +146,8 @@ exports.getAllReceivingRequest = async (req, res) => {
         ],
         status: "accepted",
       })
-        .populate("sender", "firstName lastName")
-        .populate("receiver", "firstName lastName");
+        .populate("sender", "firstName lastName about")
+        .populate("receiver", "firstName lastName about");
   
       const data = friends.map((friend) => {
         if (friend.sender._id.toString() === loggedInId.toString()) {

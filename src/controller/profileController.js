@@ -28,7 +28,7 @@ exports.userProfile = async (req, res) => {
         const { id } = req.user;
         const option={new:true};
         
-        const {firstName,lastName,email,phone, age,gender,password,skills}=req.body;
+        const {firstName,lastName,email,phone, age,gender,password,skills,about,profileImage}=req.body;
         const user=await User.findOneAndUpdate({ _id: id },req.body,{
             returnDocument:"after"
         })

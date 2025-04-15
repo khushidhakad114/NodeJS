@@ -36,7 +36,15 @@ const userSchema= new Schema({
     },
     skills:{
         type:[String],
-    }
+    },
+    about: {
+        type: String,
+        default: "Hey, I am using DevTinder", // Default text for the About section
+    },
+    profileImage: {
+        type: String, // You can store the URL/path of the image
+        default: ""
+    },
 
 });
 
