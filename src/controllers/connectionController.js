@@ -92,7 +92,7 @@ const getAllRequests = async (req, res) => {
       status: "interested",
     }).populate({
       path: "sender",
-      select: "firstName lastName -_id",
+      select: "firstName lastName email skills -_id",
     }); // loggedInd mtlb mei , mei matlb loggedInd
     console.log(receiveRequests);
     if (!receiveRequests.length) {
