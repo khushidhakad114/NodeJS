@@ -43,7 +43,7 @@ const userSchema= new Schema({
     },
     profileImage: {
         type: String, // You can store the URL/path of the image
-        default: ""
+        default: "https://cdn-icons-png.flaticon.com/512/5231/5231019.png"
     },
 
 });
