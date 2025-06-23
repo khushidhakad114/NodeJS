@@ -37,6 +37,9 @@ const userSchema = new Schema({
   skills: {
     type: [String],
   },
+  profilePic: {
+    type: String,
+  },
 });
 userSchema.set("strict", "throw");
 const User = mongoose.model("User", userSchema);
