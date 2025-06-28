@@ -146,8 +146,8 @@ exports.getAllReceivingRequest = async (req, res) => {
         ],
         status: "accepted",
       })
-        .populate("sender", "firstName lastName about")
-        .populate("receiver", "firstName lastName about");
+        .populate("sender", "firstName lastName about profileImage")
+        .populate("receiver", "firstName lastName about profileImage");
   
       const data = friends.map((friend) => {
         if (friend.sender._id.toString() === loggedInId.toString()) {

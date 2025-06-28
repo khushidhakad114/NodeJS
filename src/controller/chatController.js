@@ -1,7 +1,3 @@
-// const Chat = require("../model/chatModel")                                                                  )
-// const User = require("../model/user")
-
-
 const Chat = require("../model/chatModel");
 const User = require("../model/user");
 
@@ -9,183 +5,87 @@ const User = require("../model/user");
 // route-->post/api/accessChat
 // access-->userMiddleware
 exports.accessChat = async (req, res) => {
-  const userId = req.body.userId;
+  const { userId } = req.body; // receiver's ID
 
   if (!userId) {
-    return res.status(400).json({ error: "UserId param not sent" });
-  }
-
-  let isChat = await Chat.find({
-    isGroupChat: false,
-    $and: [
-      { users: { $elemMatch: { $eq: req.user._id } } },
-      { users: { $elemMatch: { $eq: userId } } },
-    ],
-  })
-    .populate("users", "-password")
-    .populate("latestMessage");
-
-  isChat = await User.populate(isChat, {
-    path: "latestMessage.sender",
-    select: "name profileImage email",
-  });
-
-  if (isChat.length > 0) {
-    return res.send(isChat[0]);
+    return res.status(400).json({ error: "UserId not provided" });
   }
 
   try {
-    const chatData = {
+    // Check if a chat already exists between the two users
+    let existingChat = await Chat.findOne({
+      isGroupChat: false,
+      $and: [
+        { users: { $elemMatch: { $eq: req.user._id } } },
+        { users: { $elemMatch: { $eq: userId } } },
+      ],
+    })
+      .populate("users", "firstName email profileImage")
+      .populate("latestMessage");
+
+    existingChat = await User.populate(existingChat, {
+      path: "latestMessage.sender",
+      select: "firstName profileImage email",
+    });
+
+    if (existingChat) {
+      return res.status(200).json(existingChat);
+    }
+
+    // No chat exists => Create new chat
+    const newChatData = {
       chatName: "sender",
       isGroupChat: false,
       users: [req.user._id, userId],
     };
 
-    const createdChat = await Chat.create(chatData);
+    const createdChat = await Chat.create(newChatData);
 
-    const fullChat = await Chat.findOne({ _id: createdChat._id }).populate(
+    const fullChat = await Chat.findById(createdChat._id).populate(
       "users",
-      "-password"
+      "firstName profileImage"
     );
 
-    res.status(200).json(fullChat);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(200).json(fullChat);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
+exports.getChatById = async (req, res) => {
+  try {
+    const chat = await Chat.findById(req.params.id)
+      .populate("users", "firstName lastName email profileImage");
+
+    if (!chat) {
+      return res.status(404).json({ error: "Chat not found" });
+    }
+    console.log("chat", chat)
+    res.status(200).json(chat);
+  } catch (err) {
+    console.error("Error fetching chat by ID:", err);
+    res.status(500).json({ error: "Failed to fetch chat details" });
+  }
+};
 
 // fetch all chats for a user
 // Get/api/fetchChat
-exports.fetchChat = async (req, res) => {
+exports.fetchChats = async (req, res) => {
   try {
-    let results = await Chat.find({ users: { $elemMatch: { $eq: req.user._id } } })
-      .populate("users", "-password")
-      .populate("groupAdmin", "-password")
+    const chats = await Chat.find({ users: { $elemMatch: { $eq: req.user._id } } })
+      .populate("users", "firstName profileImage email")
       .populate("latestMessage")
       .sort({ updatedAt: -1 });
 
-    results = await User.populate(results, {
+    const fullChats = await User.populate(chats, {
       path: "latestMessage.sender",
-      select: "name profileImage email",
+      select: "firstName profileImage email",
     });
 
-    res.status(200).send(results);
+    res.status(200).json(fullChats);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 
-// Create new group chat
-// Post/api/group
-exports.createGroupChat = async (req, res) => {
-  if (!req.body.users || !req.body.name) {
-    return res.status(400).send({ message: "Please fill all the fields" });
-  }
-
-  let users = JSON.parse(req.body.users);
-
-  if (users.length < 2) {
-    return res.status(400).json("More than 2 users are required to form a group chat");
-  }
-
-  users.push(req.user);
-
-  try {
-    const groupChat = await Chat.create({
-      chatName: req.body.name,
-      users: users,
-      isGroupChat: true,
-      groupAdmin: req.user,
-    });
-
-    const fullGroupChat = await Chat.findOne({ _id: groupChat._id })
-      .populate("users", "-password")
-      .populate("groupAdmin", "-password");
-
-    res.status(200).json(fullGroupChat);
-  } catch (error) {
-    res.status(400);
-    throw new Error(error.message);
-  }
-};
-
-//Rename Group
-//Put/api/chat/rename
-exports.renameGroup = async (req, res) => {
-  const { chatId, chatName } = req.body;
-
-  const updatedChat = await Chat.findByIdAndUpdate(
-    chatId,
-    {
-      chatName: chatName,
-    },
-    {
-      new: true,
-    }
-  )
-    .populate("users", "-password")
-    .populate("groupAdmin", "-password");
-
-  if (!updatedChat) {
-    res.status(404);
-    throw new Error("Chat Not Found");
-  } else {
-    res.json(updatedChat);
-  }
-};
-
-// Remove user from Group
-// PUT /api/chat/groupremove
-exports.removeFromGroup = async (req, res) => {
-  const { chatId, userId } = req.body;
-
-  // check if the requester is admin
-
-  const removed = await Chat.findByIdAndUpdate(
-    chatId,
-    {
-      $pull: { users: userId },
-    },
-    {
-      new: true,
-    }
-  )
-    .populate("users", "-password")
-    .populate("groupAdmin", "-password");
-
-  if (!removed) {
-    res.status(404);
-    throw new Error("Chat Not Found");
-  } else {
-    res.json(removed);
-  }
-};
-
-// Add user to Group / Leave
-// PUT /api/chat/groupadd
-exports.addToGroup = async (req, res) => {
-const { chatId, userId } = req.body;
-
-  // check if the requester is admin
-
-  const added = await Chat.findByIdAndUpdate(
-    chatId,
-    {
-      $push: { users: userId },
-    },
-    {
-      new: true,
-    }
-  )
-    .populate("users", "-password")
-    .populate("groupAdmin", "-password");
-
-  if (!added) {
-    res.status(404);
-    throw new Error("Chat Not Found");
-  } else {
-    res.json(added);
-  }
-};
 

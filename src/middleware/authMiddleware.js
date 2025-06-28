@@ -1,30 +1,26 @@
 const jwt = require("jsonwebtoken");
 const User = require("../model/user");
-const mongoose = require("mongoose");
 
 const userMiddleware = async (req, res, next) => {
   try {
     const token = req.cookies.token;
     if (!token) {
-      return res.status(401).json({ message: "Unauthorized" });
+      return res.status(401).json({ error: "Unauthorized: No token provided" });
     }
 
-    const decoded = jwt.verify(token, "secret");
-    console.log("Decoded Token:", decoded);
+    // Verify token
+    const decoded = jwt.verify(token, "secret"); // ⛔ Hardcoded secret is fine for dev, but use env vars in prod
+    const user = await User.findById(decoded.id).select("-password");
 
-    const userId =new mongoose.Types.ObjectId(decoded.id);
-    req.user = await User.findById({ _id: userId }).select("-password");
-
-    // console.log("Fetched User:", req.user);
-
-    if (!req.user) {
-      return res.status(401).json({ error: "User not found" });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
     }
 
+    req.user = user; // make user available to downstream routes
     next();
   } catch (err) {
-    console.error("Middleware Error:", err);
-    res.status(500).json({ error: "Internal Server Error", details: err.message });
+    console.error("Auth Middleware Error:", err.message);
+    res.status(401).json({ error: "Invalid or expired token" });
   }
 };
 

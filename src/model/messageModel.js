@@ -5,6 +5,11 @@ const messageModel=mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
     },
+    receiver: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true, 
+     },
     content:{
         type:String,
         trim:true
@@ -13,6 +18,10 @@ const messageModel=mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Chat"
     },
+    seenBy:[{ 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: "User" }],
+
 },
 {
     timestamps: true,
