@@ -23,7 +23,6 @@ const io = new Server(server, {
   },
 });
 
-// 🔗 Make io accessible in all routes
 app.use((req, res, next) => {
   req.io = io;
   next();
@@ -41,18 +40,18 @@ app.use("/api", connectionRouter);
 app.use("/api", chatRouter);
 app.use("/api", messageRouter);
 
-// 🔌 Socket.IO logic
+//  Socket.IO logic
 const onlineUsers = new Map();
 
 io.on("connection", (socket) => {
-  console.log("⚡ New socket connected:", socket.id);
+  console.log(" New socket connected:", socket.id);
 
   socket.on("setup", (userData) => {
     socket.join(userData._id);
     onlineUsers.set(userData._id, socket.id);
     socket.broadcast.emit("user online", userData._id);
     socket.emit("connected");
-    console.log(`📱 User joined: ${userData.firstName}`);
+    console.log(` User joined: ${userData.firstName}`);
   });
 
   socket.on("typing", (room) => {
@@ -65,7 +64,7 @@ io.on("connection", (socket) => {
 
   socket.on("join chat", (roomId) => {
     socket.join(roomId);
-    console.log(`💬 Joined chat room: ${roomId}`);
+    console.log(` Joined chat room: ${roomId}`);
   });
 
   socket.on("new message", (message) => {
@@ -86,12 +85,12 @@ io.on("connection", (socket) => {
         break;
       }
     }
-    console.log("❌ Socket disconnected:", socket.id);
+    console.log(" Socket disconnected:", socket.id);
   });
 });
 
 // Start server
 const PORT = process.env.PORT || 8000;
 server.listen(PORT, () => {
-  console.log(`🚀 Server with Socket.IO running on port ${PORT}`);
+  console.log(` Server with Socket.IO running on port ${PORT}`);
 });

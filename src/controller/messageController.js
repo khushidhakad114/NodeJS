@@ -9,7 +9,7 @@ exports.allMessage = async (req, res) => {
     const currentUserId = req.user._id;
     const chatId = req.params.chatId;
 
-    console.log("📨 [allMessage] Fetching messages for chat:", chatId);
+    console.log("[allMessage] Fetching messages for chat:", chatId);
 
     // Mark unseen messages as seen
     await Message.updateMany(
@@ -27,7 +27,7 @@ exports.allMessage = async (req, res) => {
       .populate("receiver", "firstName profileImage email")
       .populate("chat");
 
-    // 🔔 Emit "seen updated" to the other user in chat via socket
+    //  Emit "seen updated" to the other user in chat via socket
     const chat = await Chat.findById(chatId).populate("users", "_id");
 
     const otherUser = chat.users.find(
@@ -36,12 +36,12 @@ exports.allMessage = async (req, res) => {
 
     if (otherUser && req.io) {
       req.io.to(otherUser._id.toString()).emit("seen updated");
-      console.log(`✅ [Socket] seen updated emitted to user: ${otherUser._id}`);
+      console.log(` [Socket] seen updated emitted to user: ${otherUser._id}`);
     }
 
     res.status(200).json(messages);
   } catch (error) {
-    console.error("❌ [allMessage] Fetch error:", error);
+    console.error(" [allMessage] Fetch error:", error);
     res.status(400).json({ error: error.message });
   }
 };

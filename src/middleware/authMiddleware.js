@@ -9,14 +9,14 @@ const userMiddleware = async (req, res, next) => {
     }
 
     // Verify token
-    const decoded = jwt.verify(token, "secret"); // ⛔ Hardcoded secret is fine for dev, but use env vars in prod
+    const decoded = jwt.verify(token, process.env.JWT_SECRET); 
     const user = await User.findById(decoded.id).select("-password");
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    req.user = user; // make user available to downstream routes
+    req.user = user; 
     next();
   } catch (err) {
     console.error("Auth Middleware Error:", err.message);
