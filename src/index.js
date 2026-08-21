@@ -29,24 +29,41 @@ const messageRouter = require("./routes/messageRoute");
 const app = express();
 const server = http.createServer(app);
 
+// ===============================
+// Environment Variables
+// ===============================
+
+const PORT = process.env.PORT || 8000;
+const FRONTEND_URL = process.env.FRONTEND_URL;
+
+console.log("Frontend URL:", FRONTEND_URL);
+
+// ===============================
+// Socket.IO
+// ===============================
+
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: FRONTEND_URL,
     credentials: true,
   },
 });
 
+// Make Socket.IO available inside routes
 app.use((req, res, next) => {
   req.io = io;
   next();
 });
 
+// ===============================
 // Middleware
+// ===============================
+
 app.use(cookieParser());
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: FRONTEND_URL,
     credentials: true,
   })
 );
@@ -54,19 +71,31 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// ===============================
 // Routes
+// ===============================
+
 app.use("/api", userRouter);
 app.use("/api", connectionRouter);
 app.use("/api", chatRouter);
 app.use("/api", messageRouter);
 
-// Socket.IO logic
+// ===============================
+// Socket.IO Logic
+// ===============================
+
 const onlineUsers = new Map();
 
 io.on("connection", (socket) => {
   console.log("New socket connected:", socket.id);
 
+  // ===============================
+  // Setup User
+  // ===============================
+
   socket.on("setup", (userData) => {
+    if (!userData?._id) return;
+
     socket.join(userData._id);
 
     onlineUsers.set(userData._id, socket.id);
@@ -78,6 +107,10 @@ io.on("connection", (socket) => {
     console.log(`User joined: ${userData.firstName}`);
   });
 
+  // ===============================
+  // Typing
+  // ===============================
+
   socket.on("typing", (room) => {
     socket.in(room).emit("typing", room);
   });
@@ -86,14 +119,24 @@ io.on("connection", (socket) => {
     socket.in(room).emit("stop typing", room);
   });
 
+  // ===============================
+  // Join Chat
+  // ===============================
+
   socket.on("join chat", (roomId) => {
+    if (!roomId) return;
+
     socket.join(roomId);
 
     console.log(`Joined chat room: ${roomId}`);
   });
 
+  // ===============================
+  // New Message
+  // ===============================
+
   socket.on("new message", (message) => {
-    const chat = message.chat;
+    const chat = message?.chat;
 
     if (!chat?.users) return;
 
@@ -105,6 +148,10 @@ io.on("connection", (socket) => {
         .emit("message received", message);
     });
   });
+
+  // ===============================
+  // Disconnect
+  // ===============================
 
   socket.on("disconnect", () => {
     for (const [userId, socketId] of onlineUsers.entries()) {
@@ -121,9 +168,10 @@ io.on("connection", (socket) => {
   });
 });
 
-// Start server
-const PORT = process.env.PORT || 8000;
+// ===============================
+// Start Server
+// ===============================
 
 server.listen(PORT, () => {
-  console.log(`Server with Socket.IO running on port ${PORT}`);
+  console.log(`Server Socket.IO running on port ${PORT}`);
 });
