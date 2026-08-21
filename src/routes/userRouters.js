@@ -1,6 +1,6 @@
 const express=require("express");
 const { userMiddleware } = require("../middleware/authMiddleware");
-const { userProfile, updateProfile } = require("../controller/profilecontroller");
+const { userProfile, updateProfile } = require("../controller/profileController");
 const { signUser, loginUser, logoutUser, feed } = require("../controller/authController");
 const userRouter=express.Router();
 
