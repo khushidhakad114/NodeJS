@@ -8,68 +8,168 @@ const safeData = ["firstName", "lastName", "email", "age"];
 exports.signUser = async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
-    if (!firstName || !lastName || !email || !password) {
-      throw new Error("All fields are required");
+
+    // Validate required fields
+    if (
+      !firstName?.trim() ||
+      !lastName?.trim() ||
+      !email?.trim() ||
+      !password
+    ) {
+      return res.status(400).json({
+        error: "All fields are required",
+      });
     }
 
-    const existingUser = await User.findOne({ email });
+    // Normalize email
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Check if email already exists
+    const existingUser = await User.findOne({
+      email: normalizedEmail,
+    });
+
     if (existingUser) {
-      throw new Error("Email is already in use! Please login");
+      return res.status(409).json({
+        error: "Email is already in use. Please login.",
+        code: "EMAIL_EXISTS",
+      });
     }
 
-    if(password.length<6){
-      return res.status(400).json({message:"password must be at least 6 characters"})
+    // Validate password
+    if (password.length < 6) {
+      return res.status(400).json({
+        error: "Password must be at least 6 characters.",
+        code: "INVALID_PASSWORD",
+      });
     }
 
+    // Hash password
     const passwordHash = await bcrypt.hash(password, 10);
+
+    // Create user
     const newUser = new User({
-      firstName,
-      lastName,
-      email,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: normalizedEmail,
       password: passwordHash,
     });
 
     await newUser.save();
 
-    res.status(201).json({ message: "User created successfully", newUser });
+    // Don't send password back
+    const userResponse = {
+      _id: newUser._id,
+      firstName: newUser.firstName,
+      lastName: newUser.lastName,
+      email: newUser.email,
+    };
+
+    return res.status(201).json({
+      message: "Account created successfully!",
+      user: userResponse,
+    });
   } catch (err) {
-    res.status(500).json({ error: "Error creating user", details: err.message });
+    console.error("Signup error:", err);
+
+    return res.status(500).json({
+      error: "Something went wrong while creating your account.",
+    });
   }
 };
 
-// login logic
+// Login logic
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
 
+  // 1. Validate input
   if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required." });
+    return res.status(400).json({
+      error: "Email and password are required.",
+    });
   }
 
   try {
-    const user = await User.findOne({ email }).select("-password"); // exclude password from response
+    // 2. Normalize email
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // 3. Find user including password
+    const user = await User.findOne({ email: normalizedEmail }).select(
+      "+password"
+    );
+
+    // 4. User does not exist
     if (!user) {
-      return res.status(401).json({ error: "Invalid email or password." });
+      return res.status(404).json({
+        error: "Account not found. Please sign up first.",
+        code: "USER_NOT_FOUND",
+      });
     }
 
-    const fullUser = await User.findOne({ email }); // includes password for bcrypt comparison
-    const isPasswordValid = await bcrypt.compare(password, fullUser.password);
+    // 5. Check password
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      user.password
+    );
+
     if (!isPasswordValid) {
-      return res
-        .status(401)
-        .json({ error: "Invalid credentials! Please check email and password." });
+      return res.status(401).json({
+        error: "Incorrect password. Please try again.",
+        code: "INVALID_PASSWORD",
+      });
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-    res.cookie("token", token, { httpOnly: true });
+    // 6. Check JWT secret
+    if (!process.env.JWT_SECRET) {
+      throw new Error("JWT_SECRET is not configured.");
+    }
 
-    res.status(200).json({
+    // 7. Create JWT
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    // 8. Store token in HTTP-only cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 60 * 60 * 1000, // 1 hour
+    });
+
+    // 9. Remove password before sending user
+    user.password = undefined;
+
+    // 10. Success response
+    return res.status(200).json({
       message: "Login successful",
-      token,
       user,
     });
+
   } catch (err) {
-    console.error("Login error:", err.message);
-    res.status(500).json({ error: "Error in logging in", details: err.message });
+    console.error("Login error:", err);
+
+    return res.status(500).json({
+      error: "Something went wrong while logging in. Please try again.",
+    });
+  }
+};
+
+// Get currently logged-in user
+exports.getCurrentUser = async (req, res) => {
+  try {
+    return res.status(200).json({
+      success: true,
+      user: req.user,
+    });
+  } catch (err) {
+    console.error("Get current user error:", err);
+
+    return res.status(500).json({
+      error: "Failed to fetch current user",
+    });
   }
 };
 
@@ -107,9 +207,22 @@ exports.feed = async (req, res) => {
 // logout logic
 exports.logoutUser = async (req, res) => {
   try {
-    res.clearCookie("token");
-    res.status(200).json({ message: "Successfully logged out" });
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production"
+        ? "none"
+        : "lax",
+    });
+
+    return res.status(200).json({
+      message: "Successfully logged out",
+    });
   } catch (err) {
-    console.error("Logout error:", err.message);
+    console.error("Logout error:", err);
+
+    return res.status(500).json({
+      error: "Logout failed",
+    });
   }
 };

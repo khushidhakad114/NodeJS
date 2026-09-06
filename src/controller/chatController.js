@@ -5,46 +5,47 @@ const User = require("../model/user");
 // route-->post/api/accessChat
 // access-->userMiddleware
 exports.accessChat = async (req, res) => {
-  const { userId } = req.body; // receiver's ID
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: "UserId not provided" });
 
-  if (!userId) {
-    return res.status(400).json({ error: "UserId not provided" });
-  }
+  const filter = {
+    isGroupChat: false,
+    users: { $all: [req.user._id, userId], $size: 2 },
+  };
 
   try {
-    // Check if a chat already exists between the two users
-    let existingChat = await Chat.findOne({
-      isGroupChat: false,
-      $and: [
-        { users: { $elemMatch: { $eq: req.user._id } } },
-        { users: { $elemMatch: { $eq: userId } } },
-      ],
-    })
+    let chat = await Chat.findOne(filter)
       .populate("users", "firstName email profileImage")
       .populate("latestMessage");
 
-    existingChat = await User.populate(existingChat, {
+    if (!chat) {
+      try {
+        chat = await Chat.create({
+          chatName: "sender",
+          isGroupChat: false,
+          users: [req.user._id, userId],
+        });
+      } catch (createErr) {
+        // Another concurrent request won the race and inserted first.
+        // The unique index rejects our insert with E11000 - just refetch.
+        if (createErr.code === 11000) {
+          chat = await Chat.findOne(filter)
+            .populate("users", "firstName email profileImage")
+            .populate("latestMessage");
+        } else {
+          throw createErr;
+        }
+      }
+
+      chat = await Chat.findById(chat._id)
+        .populate("users", "firstName email profileImage")
+        .populate("latestMessage");
+    }
+
+    const fullChat = await User.populate(chat, {
       path: "latestMessage.sender",
       select: "firstName profileImage email",
     });
-
-    if (existingChat) {
-      return res.status(200).json(existingChat);
-    }
-
-    // No chat exists => Create new chat
-    const newChatData = {
-      chatName: "sender",
-      isGroupChat: false,
-      users: [req.user._id, userId],
-    };
-
-    const createdChat = await Chat.create(newChatData);
-
-    const fullChat = await Chat.findById(createdChat._id).populate(
-      "users",
-      "firstName profileImage"
-    );
 
     return res.status(200).json(fullChat);
   } catch (err) {
@@ -54,13 +55,14 @@ exports.accessChat = async (req, res) => {
 
 exports.getChatById = async (req, res) => {
   try {
-    const chat = await Chat.findById(req.params.id)
-      .populate("users", "firstName lastName email profileImage");
+    const chat = await Chat.findById(req.params.id).populate(
+      "users",
+      "firstName lastName email profileImage"
+    );
 
     if (!chat) {
       return res.status(404).json({ error: "Chat not found" });
     }
-    console.log("chat", chat)
     res.status(200).json(chat);
   } catch (err) {
     console.error("Error fetching chat by ID:", err);
@@ -87,5 +89,3 @@ exports.fetchChats = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-
