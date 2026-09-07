@@ -2,8 +2,7 @@ const User = require("../model/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const connection = require("../model/connection");
-const safeData = ["firstName", "lastName", "email", "age"];
-
+const safeData = ["firstName", "lastName", "age", "about", "skills", "profileImage"];
 // signUp logic
 exports.signUser = async (req, res) => {
   try {
